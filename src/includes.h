@@ -11,8 +11,4 @@
 #include <string.h>
 #include <stdlib.h>
 
-// custom ones
-#include "base.h"
-#include "calculator.h"
-
 #endif

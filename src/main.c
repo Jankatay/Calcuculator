@@ -1,9 +1,11 @@
 #include "includes.h"
+#include "base.h"
+#include "calculator.h"
 
 // I love raylib!
 int main() {
   // initialize the graphics library.
-  InitWindow(400, 400, "catcuculator");
+  InitWindow(400, 400, "Calcuculator");
   SetTargetFPS(60);
 
   // Raylib camera is pretty intuitive. It makes an infinite-dimension "screen" you can think of like desmos.
@@ -22,6 +24,9 @@ int main() {
   // Positive Y means going down and positive X means going right from there.
   struct Calculator* topmost = initCalculator(0, 0, biggestLen);
   giveBirth(topmost);
+  for(int i = 0; i < 9; i++) {
+    giveBirth(topmost->buttons[i]);
+  }
 
   // Raylib will basically run these functions every frame. 
   // It will be smooth as long as we calculate everything BEFORE drawing all at once.

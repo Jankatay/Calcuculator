@@ -2,6 +2,7 @@
 #define _CALCULATOR_H
 
 #include "includes.h"
+#include "base.h"
 
 // functions and structs to calculate user input and display on the calculator
 
@@ -43,7 +44,8 @@ struct Calculator* initCalculator(float xPos, float yPos, float len) {
 }
 
 // calculate where "clear" button falls under a calculator
-struct Rectangle calcClear(struct Calculator* calc) {
+bool computeClear(struct Calculator* calc, Camera2D* camera) {
+  // calculate dimensions
   Vector2 dim = calc->corner;
   float unit = calc->unit;
   Rectangle clearButton = {
@@ -52,63 +54,85 @@ struct Rectangle calcClear(struct Calculator* calc) {
     .width = unit,
     .height = unit
   };
-  return clearButton;
+  // draw the button
+  if(cameraGuiButton(clearButton, "C", camera)) {
+    calc->res[0] = '0';
+    calc->res[1] = '\0';
+    return true;
+  }
+  return false;
 }
 
-// calculate where "X" button falls under a calculator
-struct Rectangle calcXButton(struct Calculator* calc) {
+// add a string to a display
+void addStringToDisplay(const char* str, struct Calculator* calc) {
+  if(!calc || !str) return;
+  // there was an input and screen was clear
+  if(strncmp(calc->res, "0", 255) == 0) {
+    strncpy(calc->res, str, 255);
+    return;
+  }
+  // there was an input and screen had stuff on it.
+  int distance = 255 - strnlen(str, 255);
+  strncat(calc->res, str, distance);
+}
+
+// calculate where "label" button falls under a calculator
+bool fixedButton(struct Calculator* calc, const char* label, float xPos, float yPos, Camera2D* camera) {
+  // calculate the dimensions
   Vector2 dim = calc->corner;
   float unit = calc->unit;
-  Rectangle xButton = {
-    .x = dim.x, 
-    .y = dim.y,
+  Rectangle button = {
+    .x = dim.x + xPos*unit, 
+    .y = dim.y + yPos*unit,
     .width = unit,
     .height = unit
   };
-  return xButton;
+  // draw the button
+  if(cameraGuiButton(button, label, camera)) {
+    addStringToDisplay(label, calc);
+    return true;
+  }
+  return false;
+}
+
+// calculate where an operator falls under a calculator.
+bool fixedOperator(struct Calculator* calc, const char* label, float xPos, float yPos, Camera2D* camera) {
+  // calculate the dimensions
+  Vector2 dim = calc->corner;
+  float unit = calc->unit;
+  Rectangle button = {
+    .x = dim.x + xPos*unit, 
+    .y = dim.y + yPos*unit,
+    .width = unit,
+    .height = unit
+  };
+  // draw the button
+  if(cameraGuiButton(button, label, camera)) {
+    float len = strnlen(label, 255);
+    strncat(calc->res, label, 255-len);
+    return true;
+  }
+  return false;
 }
 
 // calculate where "display" screen falls under a calculator
-struct Rectangle calcDisplay(struct Calculator* calc) {
+char* computeDisplay(struct Calculator* calc, Camera2D* camera) {
+  if(!calc || !camera) return NULL;
+  // Calculate display screen
   Vector2 dim = calc->corner;
   float unit = calc->unit;
-  Rectangle xButton = {
+  Rectangle displayScreen = {
     .x = dim.x+unit,
     .y = dim.y+unit,
     .width = calc->len - unit*2,
     .height = calc->len - unit*2
   };
-  return xButton;
-}
-
-// A modified version of the GuiButton from raylib/raygui.h so it respects camera zoom now.
-// it took less than a line.
-int cameraGuiButton(Rectangle bounds, const char *text, Camera2D* camera) {
-    int result = 0;
-    GuiState state = guiState;
-
-    // Update control
-    //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked && !guiControlExclusiveMode) {
-        // this was literally the only line I had to modify
-        //Vector2 mousePoint = GetMousePosition(); 
-        Vector2 mousePoint = GetScreenToWorld2D(GetMousePosition(), *camera);     
-        if (CheckCollisionPointRec(mousePoint, bounds)) {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) result = 1;
-        }
-    }
-    //--------------------------------------------------------------------
-
-    // Draw control
-    //--------------------------------------------------------------------
-    GuiDrawRectangle(bounds, GuiGetStyle(BUTTON, BORDER_WIDTH), GetColor(GuiGetStyle(BUTTON, BORDER + (state*3))), GetColor(GuiGetStyle(BUTTON, BASE + (state*3))));
-    GuiDrawText(text, GetTextBounds(BUTTON, bounds), GuiGetStyle(BUTTON, TEXT_ALIGNMENT), GetColor(GuiGetStyle(BUTTON, TEXT + (state*3))));
-    if (state == STATE_FOCUSED) GuiTooltip(bounds);
-    //------------------------------------------------------------------
-
-    return result;      // Button pressed: result = 1
+  // compute the button
+  if(cameraGuiButton(displayScreen, calc->res, camera)) {
+    // Tell dad.
+    return strndup(calc->res, 255);
+  }
+  return NULL;
 }
 
 // Draw a calculator and all its children.
@@ -121,31 +145,30 @@ void drawCalculator(struct Calculator* calc, Camera2D* camera) {
   // first the background colors
   DrawRectangle(dim.x, dim.y, calc->len, calc->len, LIGHTGRAY);
 
-  // Calculate dimensions for the buttons.
-  Rectangle xButton = calcXButton(calc);
-  Rectangle clearButton = calcClear(calc);
-  Rectangle displayScreen = calcDisplay(calc);
-  
-  // Raygui does not account for zooming by default.
-  if(cameraGuiButton(xButton, "X", camera)) {
-    fprintf(stderr, "X\n");
-    strncat(calc->res, "X", 255);
+  // Compute the buttons.
+  // Image the calculator as a grid with gaplength of long.
+  fixedButton(calc, "X", 0, 0, camera);
+  fixedOperator(calc, "+", 0, 4, camera);
+  fixedOperator(calc, "-", 1, 4, camera);
+  fixedOperator(calc, "^", 2, 4, camera);
+  fixedOperator(calc, "*", 3, 4, camera);
+  fixedOperator(calc, "/", 4, 4, camera);
+  computeClear(calc, camera);
+
+  // if there are on buttons then we stop here.
+  if(!calc->buttons) {
+    computeDisplay(calc, camera);
+    return;
   }
 
-  // clear the screen.
-  if(cameraGuiButton(clearButton, "clear", camera)) {
-    fprintf(stderr, "clear\n");
-    calc->res[0] = '0';
-    calc->res[1] = '\0';
+  // otherwise we can compute the screen based on buttons
+  for(int i = 0; i < 9; i++) {
+    char* res = computeDisplay(calc->buttons[i],camera);
+    addStringToDisplay(res, calc);
   }
+  computeDisplay(calc, camera);
 
-  // clear the screen.
-  if(cameraGuiButton(displayScreen, calc->res, camera)) {
-    fprintf(stderr, "display\n");
-  }
-
-  // draw other ones
-  if(!calc->buttons) return;
+  // now repeat these on the children
   for(int i = 0; i < 9; i++) {
     drawCalculator(calc->buttons[i], camera);
   }
@@ -169,6 +192,5 @@ void giveBirth(struct Calculator* dad) {
     dad->buttons[5+i] = initCalculator(dim.x + 4*unit, dim.y + i*unit, unit);
   }
 }
-
 
 #endif
