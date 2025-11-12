@@ -11,4 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+// I can't remember if windows screams at this or not.
+#include <regex.h> 
+
 #endif

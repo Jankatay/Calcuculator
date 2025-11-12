@@ -48,5 +48,63 @@ int cameraGuiButton(Rectangle bounds, const char *text, Camera2D* camera) {
     return result;      // Button pressed: result = 1
 }
 
+// split a string into symbols using extended regex.
+// "[+-^*/]|-?[0-9]|"
+int regesplit(char in[255], char* out[255], const char* re) {
+  // Ensure valid regex
+  regex_t regex;
+  if(regcomp(&regex, re, REG_EXTENDED)) return 0;
+
+  // use a pointer as index.
+  char* index = in;
+
+  int buflen = 0;
+  // for each match (element in the produced list above)
+  regmatch_t pmatch;
+  for(int i = 0; regexec(&regex, index, 1, &pmatch, 0) == 0; i++) {
+    // get the matched part
+    regoff_t len = pmatch.rm_eo - pmatch.rm_so;
+    char* res = strndup(index + pmatch.rm_so, len);
+    // copy it over to buf
+    out[buflen++] = res;
+    index += pmatch.rm_eo;
+  }
+  regfree(&regex);
+  return buflen;
+}
+
+// replace all matching regex with buf
+void regexplace(char dst[255], char* buf, const char* re) {
+  // ensure valid regex
+  regex_t regex;
+  if(regcomp(&regex, re, REG_EXTENDED)) return;
+
+  // prepare dst
+  char* str = strndup(dst, 255);
+  dst[0] = '\0';
+  int limit = 255;
+
+  // for each matching regex
+  regmatch_t pmatch;
+  for(int i = 0; regexec(&regex, str, 1, &pmatch, 0) == 0; i++) {
+    // sanitize
+    if(limit <= 0) {
+      dst[0] = '\0';
+      break;
+    }
+    // append previous and buf
+    strncat(dst, str, pmatch.rm_so);
+    limit -= pmatch.rm_so;
+    strncat(dst, buf, limit);
+    str += pmatch.rm_eo;
+  }
+  // append whatever is left.
+  strncat(dst, str, limit);
+
+  // end
+  dst[254] = '\0';
+  regfree(&regex);
+}
+
 
 #endif

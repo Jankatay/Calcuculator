@@ -1,9 +1,13 @@
 #include "includes.h"
 #include "base.h"
 #include "calculator.h"
+#include "draw.h"
 
 // I love raylib!
 int main() {
+  char test[255] = "12x32 + 59 ^";
+  regexplace(test, "H", "x");
+  printf("%s\n", test);
   // initialize the graphics library.
   InitWindow(400, 400, "Calcuculator");
   SetTargetFPS(60);

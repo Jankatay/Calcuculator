@@ -1,11 +1,12 @@
 # raygui complains about unused parameters/functions
-CC = gcc -g -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function
+CC = gcc -g -ffunction-sections -Wl,--gc-sections -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function
 
 run: main
 	./main
 
-main: main.c base.h calculator.h
-	$(CC) -o $@ $^ -lraylib -lm
+main: main.c base.h calculator.h draw.h
+	$(CC) -Lraylib -o $@ $^ -lraylib -lm 
+	strip $@
 
 .PHONY: clean
 clean: 
