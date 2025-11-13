@@ -32,6 +32,7 @@ void addStringToDisplay(const char* str, struct Calculator* calc) {
   // there was an input and screen was clear
   if(calc->noval) {
     strncpy(calc->res, str, 255);
+    calc->noval = false;
     return;
   }
   // there was an input and screen had stuff on it.
@@ -73,7 +74,8 @@ bool fixedOperator(struct Calculator* calc, const char* label, float xPos, float
   // draw the button
   if(cameraGuiButton(button, label, camera)) {
     float len = strnlen(label, 255);
-    strncat(calc->res, label, 255-len);
+    if(calc->noval) strncpy(calc->res, label, 255);
+    else strncat(calc->res, label, 255-len);
     calc->noval = false;
     return true;
   }
@@ -93,9 +95,9 @@ char* computeDisplay(struct Calculator* calc, Camera2D* camera) {
     .height = calc->len - unit*2
   };
   // compute the button
+  GuiSetStyle(DEFAULT, TEXT_SIZE, calc->len/(strlen(calc->res)+1));
   if(cameraGuiButton(displayScreen, calc->res, camera)) {
     // Tell dad.
-    calc->noval = false;
     return strndup(calc->res, 255);
   }
   return NULL;
@@ -104,15 +106,21 @@ char* computeDisplay(struct Calculator* calc, Camera2D* camera) {
 // Draw a calculator and all its children.
 void drawCalculator(struct Calculator* calc, Camera2D* camera) {
   if(!calc) return;
-  // dimensions
-  Vector2 dim = calc->corner;
-  GuiSetStyle(DEFAULT, TEXT_SIZE, calc->unit);
 
-  // first the background colors
-  DrawRectangle(dim.x, dim.y, calc->len, calc->len, LIGHTGRAY);
+  //TODO: add this optimization
+  // if not visible don't bother drawing.
+  //Vector2 worldDim = GetWorldToScreen2D(dim, *camera);
+  //Vector2 screenMax = GetWorldToScreen2D((Vector2){0,0}, *camera);
+  //if((worldDim.x > screenMax.x) && (worldDim.y > screenMax.y)) return;
+  //Vector2 screenMin = GetWorldToScreen2D((Vector2){(float)GetScreenWidth(), (float)GetScreenHeight()}, *camera);
+  //if((worldDim.x+(calc->len*5) < screenMin.x) && ((worldDim.y+calc->len*5) < screenMax.y)) return;
+
+  // if zoom is too far out compared to length then you can skip as well
+  if((camera->zoom * calc->len) < 30) return;
 
   // Compute the buttons.
   // Image the calculator as a grid with gaplength of long.
+  GuiSetStyle(DEFAULT, TEXT_SIZE, calc->unit);
   fixedButton(calc, "X", 0, 0, camera);
   fixedOperator(calc, "+", 0, 4, camera);
   fixedOperator(calc, "-", 1, 4, camera);
@@ -131,7 +139,14 @@ void drawCalculator(struct Calculator* calc, Camera2D* camera) {
   // otherwise we can compute the screen based on buttons
   for(int i = 0; i < 9; i++) {
     char* res = computeDisplay(calc->buttons[i],camera);
-    addStringToDisplay(res, calc);
+    if(!res) continue;
+    else if(strchr(res, 'X')) {
+      regexplace(res, calc->res, "X");
+      strncpy(calc->res, res, 255);
+    }
+    else addStringToDisplay(res, calc);
+    calc->noval = false;
+    free(res);
   }
   calculate(calc);
   computeDisplay(calc, camera);

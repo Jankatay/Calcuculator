@@ -12,9 +12,11 @@ static Camera2D calculateCameraZoom(Camera2D camera) {
   Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
   camera.offset = GetMousePosition();
   camera.target = mousePos;
-  float scale = 0.2*wheel;
+  float scale = 0.1*wheel;
   camera.zoom = expf(logf(camera.zoom)+scale);
-  if(camera.zoom <= 0.005) camera.zoom = 0.005;
+  // hard limit. Fonts mess up otherwise. Also floating point is still limited.
+  if(camera.zoom >= 100) camera.zoom = 100; 
+  if(camera.zoom <= 0.0000005) camera.zoom = 0.0000005;
   return camera;
 }
 
@@ -105,6 +107,5 @@ void regexplace(char dst[255], char* buf, const char* re) {
   dst[254] = '\0';
   regfree(&regex);
 }
-
 
 #endif

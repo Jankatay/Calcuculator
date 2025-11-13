@@ -3,6 +3,11 @@
 #include "calculator.h"
 #include "draw.h"
 
+// check if zoomed too far.
+bool zoomFar(struct Calculator* calc, Camera2D screen);
+// make a grandpa calculator and have it adopt this one
+struct Calculator* adoptCalculator(struct Calculator* oldhead);
+
 // I love raylib!
 int main() {
   // initialize the graphics library.
@@ -36,20 +41,52 @@ int main() {
   // It will be smooth as long as we calculate everything BEFORE drawing all at once.
   while(!WindowShouldClose()) {
     mainCamera = calculateCameraZoom(mainCamera);
+    if(zoomFar(topmost, mainCamera)) {
+      topmost = adoptCalculator(topmost);
+    }
 
     // Draw everything with respect to the camera.
     BeginDrawing();
     ClearBackground(WHITE);
     BeginMode2D(mainCamera); {
-      // Usage and title
-      DrawText("Usage: Try raising to 0 to\nget started. If you write\n something that includes \n'x' you can 'apply' it like\nan operator.", 0, 420, 30, BLACK);
-      DrawText("Calcuculator. Inspired by lisp?", 0, -150, 30, RED);
+      // first the background colors
+      DrawRectangle(topmost->corner.x, topmost->corner.y, topmost->len, topmost->len, LIGHTGRAY);
       drawCalculator(topmost, &mainCamera);
     }EndMode2D();
     EndDrawing();
   }
 
-  // free all allocated memory and exit.
+  // free all allocated memory and exit
   CloseWindow();
   return 0;
+}
+
+// check if camera is zoomed out the border of a calculator
+bool zoomFar(struct Calculator* calc, Camera2D screen) { 
+  // get the dimensions
+  Vector2 leftTop = calc->corner;
+  Vector2 rightBottom = {
+    .x = calc->corner.x + calc->len,
+    .y = calc->corner.y + calc->len
+  };
+  Vector2 screenMin = GetScreenToWorld2D((Vector2){0, 0}, screen);
+  Vector2 screenMax = GetScreenToWorld2D((Vector2){GetScreenWidth(), GetScreenHeight()}, screen);
+  // check if any are outside the screen.
+  return (leftTop.x > screenMin.x) || (leftTop.y > screenMin.y) || (rightBottom.x < screenMax.x) || (rightBottom.y < screenMax.y);
+}
+
+// Replace head with a bigger new Calculator such that the old head is in there few children down.
+struct Calculator* adoptCalculator(struct Calculator* oldhead) {
+  float oldlen = oldhead->len;
+  
+  // make a grandpa node with missing leftTop corner
+  struct Calculator* newhead = initCalculator(oldhead->corner.x - 9*oldlen, oldhead->corner.y - 3*oldlen, oldhead->len * 25);
+  giveBirth(newhead);
+  for(int i = 0; i < 9; i++) giveBirth(newhead->buttons[i]);
+
+  // set rightBottom corner of leftTop corner to be old head
+  struct Calculator* newpos = newhead->buttons[3]->buttons[8];
+  memcpy(newpos, oldhead, sizeof *oldhead);
+  free(oldhead);
+  return newhead;
 }
