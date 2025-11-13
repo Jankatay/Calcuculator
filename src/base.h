@@ -14,7 +14,7 @@ static Camera2D calculateCameraZoom(Camera2D camera) {
   camera.target = mousePos;
   float scale = 0.2*wheel;
   camera.zoom = expf(logf(camera.zoom)+scale);
-  if(camera.zoom <= 0.5) camera.zoom = 0.5;
+  if(camera.zoom <= 0.005) camera.zoom = 0.005;
   return camera;
 }
 
@@ -50,7 +50,7 @@ int cameraGuiButton(Rectangle bounds, const char *text, Camera2D* camera) {
 
 // split a string into symbols using extended regex.
 // "[+-^*/]|-?[0-9]|"
-int regesplit(char in[255], char* out[255], const char* re) {
+int regexplit(char in[255], char* out[255], const char* re) {
   // Ensure valid regex
   regex_t regex;
   if(regcomp(&regex, re, REG_EXTENDED)) return 0;

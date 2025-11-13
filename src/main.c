@@ -5,9 +5,6 @@
 
 // I love raylib!
 int main() {
-  char test[255] = "12x32 + 59 ^";
-  regexplace(test, "H", "x");
-  printf("%s\n", test);
   // initialize the graphics library.
   InitWindow(400, 400, "Calcuculator");
   SetTargetFPS(60);
@@ -19,10 +16,10 @@ int main() {
     .offset = {0, 0},   // displacement from target.
     .target = {-200, -200},   // rotation and zoom origin.
     .rotation = 0,      // in degrees :3
-    .zoom = 0.50         // scaling.
+    .zoom = 0.20         // scaling.
   };
   // topmost calculator for you to zoom towards.
-  float biggestLen = (GetScreenWidth() > GetScreenHeight()) ? GetScreenWidth() : GetScreenHeight();
+  float biggestLen = 1600;
 
   // in computer graphics top-left is (0,0). 
   // Positive Y means going down and positive X means going right from there.
@@ -30,6 +27,9 @@ int main() {
   giveBirth(topmost);
   for(int i = 0; i < 9; i++) {
     giveBirth(topmost->buttons[i]);
+    for(int j = 0; j < 9; j++) {
+      giveBirth(topmost->buttons[i]->buttons[j]);
+    }
   }
 
   // Raylib will basically run these functions every frame. 

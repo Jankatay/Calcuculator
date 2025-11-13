@@ -20,6 +20,7 @@ bool computeClear(struct Calculator* calc, Camera2D* camera) {
   if(cameraGuiButton(clearButton, "C", camera)) {
     calc->res[0] = '0';
     calc->res[1] = '\0';
+    calc->noval = true;
     return true;
   }
   return false;
@@ -29,7 +30,7 @@ bool computeClear(struct Calculator* calc, Camera2D* camera) {
 void addStringToDisplay(const char* str, struct Calculator* calc) {
   if(!calc || !str) return;
   // there was an input and screen was clear
-  if(strncmp(calc->res, "0", 255) == 0) {
+  if(calc->noval) {
     strncpy(calc->res, str, 255);
     return;
   }
@@ -52,6 +53,7 @@ bool fixedButton(struct Calculator* calc, const char* label, float xPos, float y
   // draw the button
   if(cameraGuiButton(button, label, camera)) {
     addStringToDisplay(label, calc);
+    calc->noval = false;
     return true;
   }
   return false;
@@ -72,6 +74,7 @@ bool fixedOperator(struct Calculator* calc, const char* label, float xPos, float
   if(cameraGuiButton(button, label, camera)) {
     float len = strnlen(label, 255);
     strncat(calc->res, label, 255-len);
+    calc->noval = false;
     return true;
   }
   return false;
@@ -92,6 +95,7 @@ char* computeDisplay(struct Calculator* calc, Camera2D* camera) {
   // compute the button
   if(cameraGuiButton(displayScreen, calc->res, camera)) {
     // Tell dad.
+    calc->noval = false;
     return strndup(calc->res, 255);
   }
   return NULL;
@@ -119,6 +123,7 @@ void drawCalculator(struct Calculator* calc, Camera2D* camera) {
 
   // if there are on buttons then we stop here.
   if(!calc->buttons) {
+    calculate(calc);
     computeDisplay(calc, camera);
     return;
   }
@@ -128,6 +133,7 @@ void drawCalculator(struct Calculator* calc, Camera2D* camera) {
     char* res = computeDisplay(calc->buttons[i],camera);
     addStringToDisplay(res, calc);
   }
+  calculate(calc);
   computeDisplay(calc, camera);
 
   // now repeat these on the children

@@ -6,7 +6,7 @@ run: main
 
 main: main.c base.h calculator.h draw.h
 	$(CC) -Lraylib -o $@ $^ -lraylib -lm 
-	strip $@
+	#strip $@
 
 .PHONY: clean
 clean: 
