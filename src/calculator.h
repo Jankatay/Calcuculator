@@ -9,24 +9,12 @@
 // a tree
 struct Calculator {
   struct Calculator** buttons;  // array of 9 little calculators.
-  char res[255];                // result of whatever expressions you been inserting.
+  char res[32];                // result of whatever expressions you been inserting.
   Vector2 corner;               // top left corner
   float len;                    // width/height
   float unit;                   // width/height unit for each small button
   bool noval;                   // If next input should overwrite or not basically
 };
-
-// recursively clean all unused buttons in the calculator.
-// returns true when we are now an empty button ready to be deleted.
-bool clearRecursive(struct Calculator* calc) {
-  if(!calc) return true;
-  // do you like my if-for loops? :3
-  if (calc->buttons) for(int i = 0; i < 9; i++) {
-    if(!clearRecursive(calc->buttons[i])) return false;
-  }
-  // Ok so all children were empty I guess.
-  return strncmp(calc->res, "0", 255) == 0;
-}
 
 // make a new calculator at a given corner with specific length.
 struct Calculator* initCalculator(float xPos, float yPos, float len) {
@@ -66,7 +54,7 @@ void birth(struct Calculator* dad) {
 
 // calculate result of symbols. No operator precedence because shunting-yard algorithm too powerful.
 // err is 0 on fine, 1 on bad input, and 2 on 0/0
-float calculateSymbols(char* symbols[255], int symlen, int* err) {
+float calculateSymbols(char* symbols[32], int symlen, int* err) {
   if(!symbols[0]) {
     *err = 1;
     return 0;
@@ -125,7 +113,7 @@ void calculate(struct Calculator* calc) {
   // Will extract all the math symbols such that "9. ^-.12" -> {"9.", "^", "-.12"} 
   //static const char* mathSymbols = "([+-^*/])|(-?[0-9]+\\.?[0-9]?)|(-?\\.[0-9]+)";
   static const char* mathSymbols = "[+-^*/]|([0-9]+\\.?[0-9]?+)|(\\.[0-9]+)";
-  char* symbols[255] = {0};
+  char* symbols[32] = {0};
   int symlen = regexplit(calc->res, symbols, mathSymbols);
   if(symlen < 0) return;
 
@@ -141,12 +129,59 @@ void calculate(struct Calculator* calc) {
   // invalid
   if(err == 1) return;
   if(err == 2) {
-    strncpy(calc->res, "lim 0/0", 255);
+    strncpy(calc->res, "lim 0/0", 32);
     return;
   }
 
   // valid.
-  strfromf(calc->res, 255, "%.2f", calculation);
+  strfromf(calc->res, 32, "%.2f", calculation);
+}
+
+// scale a calculator to be bigger/smaller for zooming
+void resize(struct Calculator* calculator, float scale) {
+  if(!calculator) return;
+  // scale all numbers
+  calculator->corner = Vector2Multiply(calculator->corner, (Vector2){scale, scale});;
+  calculator->len *= scale;
+  calculator->unit *= scale;
+  // now do same for children
+  if(!calculator->buttons) return;
+  for(int i = 0; i < 9; i++) {
+    resize(calculator->buttons[i], scale);
+  }
+}
+
+// check if a calculator is currently visible or not.
+bool isVisible(struct Calculator* calculator, Camera2D camera) {
+  Vector2 calcCorner = GetWorldToScreen2D(calculator->corner, camera);
+
+  // left top corner is at right or bottom of the visible screen
+  if(calcCorner.x > GetScreenWidth()) return false;
+  if(calcCorner.y > GetScreenHeight()) return false;
+
+  // The length isn't enough to reach the screen.
+  float len = calculator->len * camera.zoom;
+  if(len < 100) return false; // zoomed out too much = invisible
+  if((calcCorner.x + len) < 0) return false;
+  if((calcCorner.y + len) < 0) return false;
+
+  return true;
+}
+
+// recursively free a calculator tree.
+void freeTree(struct Calculator** head) {
+  struct Calculator* calculator = *head;
+  // sanitize
+  if(!calculator) return;
+  if(!calculator->buttons) return;
+  
+  // free all children first.
+  for(int i = 0; i < 9; i++) freeTree(&calculator->buttons[i]);
+  free(calculator->buttons);
+
+  // set it to NULL as good practice
+  free(*head);
+  *head = NULL;
 }
 
 #endif
