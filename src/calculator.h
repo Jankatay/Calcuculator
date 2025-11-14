@@ -46,7 +46,7 @@ struct Calculator* initCalculator(float xPos, float yPos, float len) {
 }
 
 // add bunch of child nodes to make calculator more COMPLETE after initializing
-void giveBirth(struct Calculator* dad) {
+void birth(struct Calculator* dad) {
   // I structured Calculator in such a way all the necessary variables are already there. 
   dad->buttons = (struct Calculator**)calloc(1, sizeof(struct Calculator));
   Vector2 dim = dad->corner;

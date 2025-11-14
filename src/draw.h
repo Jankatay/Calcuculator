@@ -118,6 +118,10 @@ void drawCalculator(struct Calculator* calc, Camera2D* camera) {
   // if zoom is too far out compared to length then you can skip as well
   if((camera->zoom * calc->len) < 30) return;
 
+  // first the background colors
+  Vector2 dim = calc->corner;
+  DrawRectangle(dim.x, dim.y, calc->len, calc->len, LIGHTGRAY);
+
   // Compute the buttons.
   // Image the calculator as a grid with gaplength of long.
   GuiSetStyle(DEFAULT, TEXT_SIZE, calc->unit);
