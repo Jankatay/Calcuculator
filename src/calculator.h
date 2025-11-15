@@ -134,7 +134,8 @@ void calculate(struct Calculator* calc) {
   }
 
   // valid.
-  strfromf(calc->res, 32, "%.2f", calculation);
+  //strfromf(calc->res, 32, "%.2f", calculation);
+  snprintf(calc->res, 32, "%.2f", calculation);
 }
 
 // scale a calculator to be bigger/smaller for zooming

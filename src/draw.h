@@ -98,7 +98,7 @@ char* computeDisplay(struct Calculator* calc, Camera2D camera) {
   GuiSetStyle(DEFAULT, TEXT_SIZE, calc->len/(strlen(calc->res)+1));
   if(cameraGuiButton(displayScreen, calc->res, camera)) {
     // Tell dad.
-    return strndup(calc->res, 32);
+    return strndupClone(calc->res, 32);
   }
   return NULL;
 }

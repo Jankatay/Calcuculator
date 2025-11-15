@@ -5,6 +5,17 @@
 
 #include "includes.h"
 
+// clone of linux's strndup so it runs on windows
+char* strndupClone(const char* s, int n) {
+  if(!s || n < 0) return NULL;
+  // allocate the new memory
+  int len = strnlen(s, n);
+  char* cpy = (char*)calloc(len, sizeof(char));
+  // copy old one and return.
+  strncpy(cpy, s, len);
+  return cpy;
+}
+
 // Calculate where camera will zoom based on mouse.
 static Camera2D calculateCameraZoom(Camera2D camera) {
   float wheel = GetMouseWheelMove();
@@ -64,7 +75,7 @@ int regexplit(char in[32], char* out[32], const char* re) {
   for(int i = 0; regexec(&regex, index, 1, &pmatch, 0) == 0; i++) {
     // get the matched part
     regoff_t len = pmatch.rm_eo - pmatch.rm_so;
-    char* res = strndup(index + pmatch.rm_so, len);
+    char* res = strndupClone(index + pmatch.rm_so, len);
     // copy it over to buf
     out[buflen++] = res;
     index += pmatch.rm_eo;
@@ -80,7 +91,7 @@ void regexplace(char dst[32], char* buf, const char* re) {
   if(regcomp(&regex, re, REG_EXTENDED)) return;
 
   // prepare dst
-  char* str = strndup(dst, 32);
+  char* str = strndupClone(dst, 32);
   dst[0] = '\0';
   int limit = 32;
 
@@ -102,6 +113,7 @@ void regexplace(char dst[32], char* buf, const char* re) {
   strncat(dst, str, limit);
 
   // end
+  free(str);
   dst[254] = '\0';
   regfree(&regex);
 }
