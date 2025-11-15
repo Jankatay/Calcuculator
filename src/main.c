@@ -12,7 +12,7 @@ struct Calculator* adopt(struct Calculator* oldhead);
 // readjust camera and calculator
 struct Calculator* readjust(struct Calculator* calc, Camera2D* camera, float scale);
 
-// I love raylib!
+// will have to edit this so windows doesn't lose its mind.
 int main() {
   // initialize the graphics library.
   InitWindow(400, 400, "Calcuculator");

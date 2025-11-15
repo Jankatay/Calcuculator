@@ -31,12 +31,12 @@ void addStringToDisplay(const char* str, struct Calculator* calc) {
   if(!calc || !str) return;
   // there was an input and screen was clear
   if(calc->noval) {
-    strncpy(calc->res, str, 32);
+    strncpy(calc->res, str, 128);
     calc->noval = false;
     return;
   }
   // there was an input and screen had stuff on it.
-  int distance = 32 - strnlen(str, 32);
+  int distance = 128 - strnlen(str, 128);
   strncat(calc->res, str, distance);
 }
 
@@ -73,9 +73,9 @@ bool fixedOperator(struct Calculator* calc, const char* label, float xPos, float
   };
   // draw the button
   if(cameraGuiButton(button, label, camera)) {
-    float len = strnlen(label, 32);
-    if(calc->noval) strncpy(calc->res, label, 32);
-    else strncat(calc->res, label, 32-len);
+    float len = strnlen(label, 128);
+    if(calc->noval) strncpy(calc->res, label, 128);
+    else strncat(calc->res, label, 128-len);
     calc->noval = false;
     return true;
   }
@@ -98,7 +98,7 @@ char* computeDisplay(struct Calculator* calc, Camera2D camera) {
   GuiSetStyle(DEFAULT, TEXT_SIZE, calc->len/(strlen(calc->res)+1));
   if(cameraGuiButton(displayScreen, calc->res, camera)) {
     // Tell dad.
-    return strndupClone(calc->res, 32);
+    return strndupClone(calc->res, 128);
   }
   return NULL;
 }
@@ -109,8 +109,8 @@ void drawDisplay(struct Calculator* calc, Camera2D camera) {
     char* res = computeDisplay(calc->buttons[i],camera);
     if(!res) continue;
     else if(strchr(res, 'X')) {
-      regexplace(res, calc->res, "X");
-      strncpy(calc->res, res, 32);
+      replacex(res, calc->res, 128);
+      strncpy(calc->res, res, 128);
     }
     else addStringToDisplay(res, calc);
     calc->noval = false;
