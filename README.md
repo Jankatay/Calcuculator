@@ -1,12 +1,26 @@
 Calculate your own calculator.
 
-# Usage.
+# Usage
 Raise 0^0 to get started. Then zoom out and use the result as button.  
 
 Buttons with "X" in them will be applied to what's on the display. So if screen has "+" and you press on a button with "2x3" on it you will get "5."
 They can be applied to numbers or a mix of numbers and operators as well.
 
 Use "C" to clear screen.
+
+# Building
+Instructions are for linux. To compile from linux to windows you will need mingw-w64. 
+The static libraries and headers are all included but you may install raylib just in case. Link at bottom.
+You need gmake and gcc, which you probably have already.
+```
+# clone repo
+git clone https://github.com/Jankatay/Calcuculator.git
+# compile to linux
+make
+# compile to windows, will open it in wine for testing.
+make windows
+```
+The src/ will have a debug build and src/release will have an executable with raylib statically linked so it runs on machines without raylib installed.
 
 # Todo
 - (In progress) Improve comments and add pdf explanation so this can be used to learn programming concepts.
