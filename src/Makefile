@@ -3,17 +3,22 @@ CFLAGS = -Os -flto -ffunction-sections -Wl,--gc-sections -Wall -Wextra -Werror -
 
 
 run: main
-	./main
+	./release/main
+
+windows: main.exe
+	wine ./release/main.exe
 
 main: main.c base.h calculator.h draw.h includes.h operations.h
 	gcc $(CFLAGS) -Lraylib -o $@ $^ -lraylib -lm 
-	strip $@
+	cp $@ release
+	strip release/$@
 
-windows/main.exe: main.c base.h calculator.h draw.h includes.h operations.h
-	x86_64-w64-mingw32-gcc $(CFLAGS) -Lwindows -o $@ main.c -lraylib -lopengl32 -lgdi32 -lwinmm -lm
-	strip $@
+main.exe: main.c base.h calculator.h draw.h includes.h operations.h
+	x86_64-w64-mingw32-gcc $(CFLAGS) -Lraylib -o $@ main.c -lraywindows -lopengl32 -lgdi32 -lwinmm -lm
+	cp $@ release
+	strip release/$@
 
 .PHONY: clean
 clean: 
-	rm -f main
-	rm -f windows/main.exe
+	rm -f main main.exe
+	rm -f release/* 
