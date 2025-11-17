@@ -24,6 +24,7 @@ Currently I would much rather start a new project than improve this one but in t
 ## Cross-compiling tools.
 - mingw-w64 - https://www.mingw-w64.org/
 
-## Example snippets.
+## Helpful links used
+- Overall C - https://linux.die.net/man/3/
 - camera_mouse_zoom - https://github.com/raysan5/raylib/blob/master/examples/core/core_2d_camera_mouse_zoom.c
 - cross-compiling - https://stackoverflow.com/questions/69863663/how-do-i-link-and-compile-raylib-on-windows#71320067
