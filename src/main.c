@@ -10,12 +10,20 @@ bool zoomFar(struct Calculator* calc, Camera2D screen);
 struct Calculator* adopt(struct Calculator* oldhead);
 
 // readjust camera and calculator
-struct Calculator* readjust(struct Calculator* calc, Camera2D* camera, float scale);
+void readjust(struct Calculator* calc, Camera2D* camera, float scale);
+
+// when zoomed in TOO much it will give a warning from among this array
+const char* const messageArr[] = {"hello", "uwu", ":3", "zooming all by yourself handsome?", "zooming aww by youwsewf?", 
+  "maybe later", "LMAO", "I refuse!", "you just lost the game", "why are you zooming?", "nah", "\"screw you\" *unzooms*", 
+  "notice me ignore consent, microsoft", "maybe later", "NYI : not yet implemented.", "Check linux \"strings\" command"};
+const size_t messageLen = sizeof(messageArr)/sizeof(char*);
 
 // will have to edit this so windows doesn't lose its mind.
 int main() {
   // initialize the graphics library.
   InitWindow(400, 400, "Calcuculator");
+  SetWindowState(FLAG_WINDOW_RESIZABLE);
+  GuiSetStyle(DEFAULT, TEXT_SPACING, 10);
   float startPosition = 400;
   SetTargetFPS(60);
 
@@ -35,27 +43,52 @@ int main() {
   birth(topmost);
   topmost = adopt(topmost);
 
+  // where in messages we are.
+  int messageIndex = 0;
+
   // Raylib will basically run these functions every frame. 
   // It will be smooth as long as we calculate everything BEFORE drawing all at once.
   while(!WindowShouldClose()) {
+    // set new zoom
+    struct Camera2D temp = mainCamera;
+    mainCamera = calculateCameraZoom(mainCamera);
+
+    // ensure zoom is not TOO much.
+    bool showFunnyMessage = false;
+    if(fabs(topmost->corner.x) > 1000000000 || fabs(topmost->corner.y) > 1000000000) {
+      mainCamera = temp;
+      mainCamera.zoom /= 1.1;
+      showFunnyMessage = true;
+    } else {
+      // poor mans' random number generator
+      messageIndex = (messageIndex+1) % messageLen;
+      showFunnyMessage = false;
+    }
+
     // calculateCameraZoom reaches floating-point bit-limit FAST so resize everything and offset camera once in a while to give illusion of zoom instead.
-    while(zoomFar(topmost, mainCamera) || mainCamera.zoom < 0.0016) {
-      topmost = readjust(topmost, &mainCamera, 0.0016);
+    while(zoomFar(topmost, mainCamera)) {
+      topmost = adopt(topmost);
+    }
+    while(mainCamera.zoom < 0.0016) {
+      readjust(topmost, &mainCamera, 0.0016);
     }
     while(mainCamera.zoom > 4) {
-      topmost = readjust(topmost, &mainCamera, 25.0);
+      readjust(topmost, &mainCamera, 25.0);
     }
-    mainCamera = calculateCameraZoom(mainCamera);
 
     // Draw everything with respect to the camera.
     ClearBackground(BLACK);
     BeginDrawing();
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 30);
-    GuiDrawText("You just lost the game :3", (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()}, TEXT_ALIGN_CENTER, RED);
     // Draws from most visible to least visible in order so it's still fine to calculate as I`` draw in this case.
     BeginMode2D(mainCamera); {
       drawCalculator(topmost, mainCamera);
     }EndMode2D();
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 25);
+    GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, 1);
+    if(showFunnyMessage) {
+      GuiDrawText(messageArr[messageIndex], (Rectangle){0, 0, GetScreenWidth(), GetScreenHeight()}, TEXT_ALIGN_CENTER, RED);
+    }
+    GuiSetStyle(DEFAULT, TEXT_WRAP_MODE, 0);
     EndDrawing();
   }
 
@@ -96,13 +129,11 @@ struct Calculator* adopt(struct Calculator* oldhead) {
 }
 
 // resize a calculator and offset camera to still be around same.
-struct Calculator* readjust(struct Calculator* calc, Camera2D* camera, float scale) {
+void readjust(struct Calculator* calc, Camera2D* camera, float scale) {
   // resize calculator
-  calc = adopt(calc);
   resize(calc, scale);
   // set camera.
   camera->zoom /= scale;
   camera->target.x *= scale;
   camera->target.y *= scale;
-  return calc;
 }

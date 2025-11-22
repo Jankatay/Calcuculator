@@ -71,7 +71,6 @@ void calculate(struct Calculator* calc) {
   }
 
   // valid.
-  //strfromf(calc->res, 128, "%.2f", calculation);
   snprintf(calc->res, 128, "%.2f", calculation);
 }
 

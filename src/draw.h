@@ -94,8 +94,12 @@ char* computeDisplay(struct Calculator* calc, Camera2D camera) {
     .width = calc->len - unit*2,
     .height = calc->len - unit*2
   };
-  // compute the button
+
+  // set style
   GuiSetStyle(DEFAULT, TEXT_SIZE, calc->len/(strlen(calc->res)+1));
+  if(calc->noval) GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0x686868ff);
+  else GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0x121212ff);
+
   if(cameraGuiButton(displayScreen, calc->res, camera)) {
     // Tell dad.
     return strndupClone(calc->res, 128);
@@ -123,6 +127,7 @@ void drawDisplay(struct Calculator* calc, Camera2D camera) {
 // compute and draw fixed buttons for a calculator
 void drawFixedButtons(struct Calculator* calc, Camera2D camera) {
   // Imagine the calculator as a grid with gaplength of len.
+  GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0x121212ff);
   GuiSetStyle(DEFAULT, TEXT_SIZE, calc->unit);
   fixedButton(calc, "X", 0, 0, camera);
   fixedOperator(calc, "+", 0, 4, camera);
@@ -142,7 +147,6 @@ void drawCalculator(struct Calculator* calc, Camera2D camera) {
   Vector2 dim = calc->corner;
   DrawRectangle(dim.x, dim.y, calc->len, calc->len, LIGHTGRAY);
   drawFixedButtons(calc, camera);
-
 
   // if there are on buttons then we stop here.
   if(!calc->buttons) {
