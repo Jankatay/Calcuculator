@@ -17,7 +17,11 @@ calcuculator.exe: main.c base.h calculator.h draw.h includes.h operations.h
 	cp $@ release
 	strip release/$@
 
-.PHONY: clean
+
+.PHONY: clean compress
+compress:
+	upx --brute release/*
+
 clean: 
 	rm -f calcuculator calcuculator.exe
 	rm -f release/*
