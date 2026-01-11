@@ -14,7 +14,7 @@ Currently I would much rather start a new project than improve this one but in t
 - Memory management is not as efficient as it can/should be.
 - Run through valgrind.
 - Add operator precedence.
-- Use a smaller graphics library. Current executable is 1000kb on linux and 1004 kb on windows. 300kb using packers.
+- Use a smaller graphics library. Current executable is 1000kb on linux and 1004 kb on windows. 286kb on linux using packers.
 
 # Credits
 ## Graphics libraries.
